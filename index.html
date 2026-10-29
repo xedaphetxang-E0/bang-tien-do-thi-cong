@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quản lý thi công</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f6f6f3;--surface:#fff;--band:#eceeea;--line:#e1e3de;--text:#1f2622;--muted:#7a827d;--accent:#0f5c47;--accent-ink:#fff;
+--todo:#9aa19c;--doing:#2f6fe0;--done:#1c9a6c;--red:#c93c3c;--amber:#b7791f;--done-bg:#c6f0df;--doing-bg:#d6e4fb;--todo-bg:#eef0ed}
+@media (prefers-color-scheme:dark){:root{--bg:#141816;--surface:#1b201d;--band:#242a26;--line:#2f3631;--text:#e8ece9;--muted:#8d968f;--accent:#4fc2a0;--accent-ink:#0d1512;--red:#f08080;--amber:#e3b25c;--done-bg:#1f4a3b;--doing-bg:#1f3558;--todo-bg:#262c28}}
+*{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 "Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header,.bar2{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 20px}
+header{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.ptitle{display:none;margin:0 20px;font-size:18px}
+.spacer{flex:1}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{border:0;background:none;color:var(--muted);padding:6px 10px;border-radius:6px;cursor:pointer;font:inherit}
+.tab[aria-pressed="true"]{background:var(--band);color:var(--text);font-weight:600}
+.tab small{opacity:.8}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--text);padding:7px 12px;border-radius:6px;cursor:pointer;font:inherit}
+.btn:hover{background:var(--band)}
+.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.primary:hover{background:var(--accent);filter:brightness(1.1)}
+:focus-visible{outline:2px solid var(--doing);outline-offset:1px}
+#proj{width:auto;max-width:260px;font-weight:700;border:1px solid var(--line);background:var(--surface);padding:7px 8px}
+.wrap{overflow-x:auto;margin:4px 20px 16px}
+table{border-collapse:collapse;width:100%;min-width:980px;background:var(--surface);border:1px solid var(--line)}
+th{font-weight:500;color:var(--muted);text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr.group td{background:var(--band);font-weight:700}
+tr.group td:nth-child(2){border-left:4px solid var(--accent)}
+.gname{display:flex;align-items:center;gap:8px}
+.tog{border:0;background:none;color:var(--text);cursor:pointer;width:22px;height:22px;transition:transform .15s}
+.tog[aria-expanded="false"]{transform:rotate(-90deg)}
+.indent{padding-left:28px}
+input,select,textarea{font:inherit;color:inherit;background:transparent;border:1px solid transparent;border-radius:4px;padding:4px 6px;width:100%}
+input:hover,select:hover,textarea:hover{border-color:var(--line)}
+input:focus,select:focus,textarea:focus{border-color:var(--doing);background:var(--surface)}
+.gname input{font-weight:700}
+textarea{resize:vertical;min-height:28px;font-size:12px;color:var(--muted)}
+.pct{width:64px;text-align:center;font-weight:600}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:600;background:var(--todo-bg)}
+.pill i{width:6px;height:6px;border-radius:50%;background:var(--todo)}
+.pill.doing i{background:var(--doing)}.pill.done i{background:var(--done)}
+select.st{width:auto;font-size:12px;font-weight:600}
+.s-need{color:var(--red)}.s-wait{color:var(--amber)}.s-going{color:var(--doing)}.s-done{color:var(--done)}
+.bar{display:block;position:relative;border-radius:4px;background:var(--todo-bg);height:24px;overflow:hidden;min-width:60px}
+.bar b{position:absolute;inset:0 auto 0 0;background:var(--doing-bg)}
+.bar.done b{background:var(--done-bg)}
+.bar span{position:relative;display:block;text-align:center;line-height:24px;font-weight:600;font-size:12px}
+.num{width:70px;text-align:center}.date{width:134px}.unit{width:70px}
+.qty{display:flex;gap:4px}
+.ro{padding:4px 6px;white-space:nowrap}
+.act{display:flex;gap:2px;opacity:0}
+tr:hover .act,.act:focus-within{opacity:1}
+.ic{border:0;background:none;color:var(--muted);cursor:pointer;padding:4px 6px;border-radius:4px;font:inherit}
+.ic:hover{background:var(--band);color:var(--text)}
+.grip{cursor:grab;color:var(--muted);user-select:none;padding:4px;opacity:.5}
+tr:hover .grip{opacity:1}
+tr.dragging{opacity:.4}
+tr.ob td{box-shadow:inset 0 -2px 0 var(--doing)}
+tr.ot td{box-shadow:inset 0 2px 0 var(--doing)}
+.add button{border:0;background:none;color:var(--text);cursor:pointer;font:inherit;font-weight:500;padding:4px 8px}
+.add button:hover{text-decoration:underline}
+footer{padding:4px 20px 28px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap}
+footer strong{color:var(--text)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+#q{width:220px;border-color:var(--line);background:var(--surface);padding:7px 10px}
+#mg{width:auto;border-color:var(--line);background:var(--surface);padding:7px 8px}
+@media print{header,.bar2,.act,.add,.tog,.grip{display:none!important}.ptitle{display:block}.wrap{overflow:visible}
+input,select,textarea{border:0!important;appearance:none;-webkit-appearance:none}}
+</style>
+</head>
+<body>
+<header>
+  <select id="proj" aria-label="Công trình"></select>
+  <button class="btn" id="pNew">＋ Công trình</button>
+  <button class="btn" id="pRen">Đổi tên</button>
+  <button class="btn" id="pDel">Xóa</button>
+  <nav class="tabs" style="margin-left:8px">
+    <button class="tab" data-v="gantt" aria-pressed="true">Tiến độ</button>
+    <button class="tab" data-v="mat" aria-pressed="false">Vật tư <small id="mcnt"></small></button>
+  </nav>
+  <span class="spacer"></span>
+  <button class="btn" id="exp">Xuất JSON</button>
+  <button class="btn" id="imp">Nhập JSON</button>
+  <button class="btn" id="print">In PDF</button>
+  <input type="file" id="file" accept=".json" hidden>
+</header>
+<h2 class="ptitle" id="ptitle"></h2>
+
+<section id="v-gantt">
+  <div class="bar2">
+    <div class="tabs" id="ftabs"></div><span class="spacer"></span>
+    <button class="btn" id="addGroup">Thêm nhóm việc</button>
+    <button class="btn primary" id="addTask">Thêm việc</button>
+  </div>
+  <div class="wrap"><table>
+    <thead><tr><th style="width:30px"></th><th style="width:32%">Hạng mục</th><th>Trạng thái</th><th style="width:110px">Tiến độ</th><th>Bắt đầu</th><th>Ngày</th><th>Kết thúc</th><th style="width:22%">Ghi chú</th><th style="width:50px"></th></tr></thead>
+    <tbody id="body"></tbody>
+  </table></div>
+  <footer id="foot"></footer>
+</section>
+
+<section id="v-mat" hidden>
+  <div class="bar2">
+    <div class="tabs" id="mtabs"></div><span class="spacer"></span>
+    <label>Hạng mục <select id="mg"></select></label>
+    <input id="q" type="search" placeholder="Tìm vật tư, quy cách..." aria-label="Tìm vật tư">
+    <button class="btn primary" id="addMat">Thêm vật tư</button>
+  </div>
+  <div class="wrap"><table style="min-width:860px">
+    <thead><tr><th style="width:34%">Tên vật tư / quy cách</th><th>Số lượng</th><th style="width:24%">Hạng mục phục vụ</th><th>Hạn tập kết</th><th>Trạng thái</th><th style="width:50px"></th></tr></thead>
+    <tbody id="mbody"></tbody>
+  </table></div>
+</section>
+
+<script>
+const KEY="tdtc-v2",OLD="tien-do-thi-cong-v1",DAY=864e5;
+const uid=()=>Math.random().toString(36).slice(2,9);
+const $=id=>document.getElementById(id);
+const T=(name,start,days,pct,note="")=>({id:uid(),name,start,days,pct,note});
+const PHASES=["1. MÓNG & CỌC","2. PHẦN THÔ GIẰNG CỘT","3. PHẦN THÔ XÂY TƯỜNG TRỆT","4. PHẦN THÔ XÂY TƯỜNG - LẦU 1","5. PHẦN THÔ - MÁI","6. CƠ ĐIỆN MEP","7. HOÀN THIỆN","8. NỘI THẤT & BÀN GIAO"];
+const phases=()=>PHASES.map(n=>({id:uid(),name:n,open:true,tasks:[]}));
+function seed(){
+  const g=phases();
+  g[0].tasks=[T("Công tác chuẩn bị","2026-09-11",16,100),T("Xây kè đá + định vị cột","2026-09-27",22,100),T("Xây hố xử lý nước thải","2026-10-18",8,100),T("Đổ cán đất","2026-10-22",6,100)];
+  g[1].tasks=[T("Định vị đổ giằng","2026-10-26",3,100),T("Đổ trụ - giằng cote nền +200","2026-10-29",4,0,"Giằng 200 đổ nguyên khối bê tông, bố trí sắt (thầu 1/2 - CĐT 1/2)")];
+  return g;
+}
+const mkProject=(code,name,groups)=>({id:uid(),code,name,groups,mats:[]});
+
+let S;
+try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!S||!Array.isArray(S.projects)||!S.projects.length){
+  let old;try{old=JSON.parse(localStorage.getItem(OLD))}catch(e){}
+  const p=mkProject("DTH01","Công trình DTH",Array.isArray(old)&&old.length?old:seed());
+  S={cur:p.id,projects:[p]};
+}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const P=()=>S.projects.find(p=>p.id===S.cur)||S.projects[0];
+const findG=id=>P().groups.find(g=>g.id===id);
+let view="gantt",filter="all",ms="all",q="",mg="";
+
+// ---------- ngày & tổng hợp ----------
+const parse=s=>s?new Date(s+"T00:00:00Z"):null;
+const iso=d=>d.toISOString().slice(0,10);
+const endOf=t=>t.start?new Date(+parse(t.start)+(Math.max(1,t.days)-1)*DAY):null;
+const fmt=d=>d?String(d.getUTCDate()).padStart(2,"0")+"/"+String(d.getUTCMonth()+1).padStart(2,"0"):"";
+const statusOf=p=>p>=100?"done":p>0?"doing":"todo";
+const LABEL={todo:"Chưa làm",doing:"Đang làm",done:"Đã xong"};
+const MS={need:"Thiếu / Gấp",wait:"Chờ CĐT",going:"Đang về",done:"Đã về"};
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function rollup(g){
+  if(!g.tasks.length)return{pct:0,start:null,end:null,days:null,status:"todo"};
+  const ts=g.tasks.filter(t=>t.start),w=g.tasks.reduce((a,t)=>a+Math.max(1,t.days),0);
+  const pct=Math.round(g.tasks.reduce((a,t)=>a+t.pct*Math.max(1,t.days),0)/w);
+  const s=ts.length?new Date(Math.min(...ts.map(t=>+parse(t.start)))):null;
+  const e=ts.length?new Date(Math.max(...ts.map(t=>+endOf(t)))):null;
+  return{pct,start:s,end:e,days:s?Math.round((e-s)/DAY)+1:null,status:statusOf(pct)};
+}
+const bar=p=>`<span class="bar ${p>=100?"done":""}"><b style="width:${p}%"></b><span>${p}%</span></span>`;
+
+// ---------- công trình ----------
+function renderProj(){
+  $("proj").innerHTML=S.projects.map(p=>`<option value="${p.id}" ${p.id===P().id?"selected":""}>${esc(p.code)} · ${esc(p.name)}</option>`).join("");
+  $("ptitle").textContent=P().code+" · "+P().name;
+}
+function renderAll(){
+  renderProj();render();renderMat();
+  $("v-gantt").hidden=view!=="gantt";$("v-mat").hidden=view!=="mat";
+  document.querySelectorAll(".tab[data-v]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===view));
+}
+$("proj").onchange=e=>{S.cur=e.target.value;filter="all";ms="all";mg="";q="";$("q").value="";save();renderAll()};
+$("pNew").onclick=()=>{
+  const code=prompt("Mã công trình (ví dụ DTH02):");if(!code)return;
+  const name=prompt("Tên công trình:","")||"";
+  const p=mkProject(code.trim(),name.trim(),phases());
+  S.projects.push(p);S.cur=p.id;save();renderAll();
+};
+$("pRen").onclick=()=>{
+  const p=P(),code=prompt("Mã công trình:",p.code);if(!code)return;
+  const name=prompt("Tên công trình:",p.name);
+  p.code=code.trim();if(name!==null)p.name=name.trim();save();renderProj();
+};
+$("pDel").onclick=()=>{
+  if(S.projects.length<2)return alert("Cần giữ lại ít nhất một công trình.");
+  if(!confirm("Xóa công trình "+P().code+" cùng toàn bộ tiến độ và vật tư?"))return;
+  S.projects=S.projects.filter(p=>p!==P());S.cur=S.projects[0].id;save();renderAll();
+};
+document.querySelectorAll(".tab[data-v]").forEach(b=>b.onclick=()=>{view=b.dataset.v;renderAll()});
+
+// ---------- tiến độ ----------
+const body=$("body");
+function render(){
+  const rows=[],G=P().groups;
+  $("ftabs").innerHTML=[["all","Tất cả"],...Object.entries(LABEL)].map(([k,l])=>`<button class="tab" data-f="${k}" aria-pressed="${filter===k}">${l}</button>`).join("");
+  const grip=filter==="all"?'<span class="grip" title="Kéo để đổi thứ tự">⠿</span>':"";
+  G.forEach(g=>{
+    const r=rollup(g),tasks=g.tasks.filter(t=>filter==="all"||statusOf(t.pct)===filter);
+    if(filter!=="all"&&!tasks.length)return;
+    rows.push(`<tr class="group" data-g="${g.id}"><td>${grip}</td>
+      <td><div class="gname"><button class="tog" data-a="tog" aria-expanded="${g.open}" aria-label="Thu gọn hoặc mở nhóm">▼</button><input data-f="gname" value="${esc(g.name)}" aria-label="Tên nhóm"></div></td>
+      <td><span class="pill ${r.status}"><i></i>${LABEL[r.status]}</span></td><td>${bar(r.pct)}</td>
+      <td class="ro">${fmt(r.start)}</td><td class="ro" style="text-align:center">${r.days??""}</td><td class="ro">${fmt(r.end)}</td><td></td>
+      <td><div class="act"><button class="ic" data-a="delG" title="Xóa nhóm" aria-label="Xóa nhóm">✕</button></div></td></tr>`);
+    if(!g.open)return;
+    tasks.forEach(t=>{
+      const st=statusOf(t.pct);
+      rows.push(`<tr data-g="${g.id}" data-t="${t.id}"><td>${grip}</td>
+        <td class="indent"><input data-f="name" value="${esc(t.name)}" aria-label="Tên việc"></td>
+        <td><select class="st s-${st}" data-f="status" aria-label="Trạng thái">${Object.keys(LABEL).map(k=>`<option value="${k}" ${k===st?"selected":""}>${LABEL[k]}</option>`).join("")}</select></td>
+        <td><input class="pct" data-f="pct" type="number" min="0" max="100" step="5" value="${t.pct}" aria-label="Phần trăm"></td>
+        <td><input class="date" data-f="start" type="date" value="${t.start||""}" aria-label="Ngày bắt đầu"></td>
+        <td><input class="num" data-f="days" type="number" min="1" value="${t.days}" aria-label="Số ngày"></td>
+        <td class="ro">${fmt(endOf(t))}</td>
+        <td><textarea data-f="note" rows="1" aria-label="Ghi chú">${esc(t.note)}</textarea></td>
+        <td><div class="act"><button class="ic" data-a="delT" title="Xóa việc" aria-label="Xóa việc">✕</button></div></td></tr>`);
+    });
+    if(filter==="all")rows.push(`<tr class="add" data-g="${g.id}"><td></td><td colspan="8" class="indent"><button data-a="addT">＋ Thêm việc</button></td></tr>`);
+  });
+  body.innerHTML=rows.join("")||`<tr><td colspan="9" class="empty">Chưa có việc nào khớp bộ lọc.</td></tr>`;
+  const all=G.flatMap(g=>g.tasks),c={todo:0,doing:0,done:0};
+  all.forEach(t=>c[statusOf(t.pct)]++);
+  $("foot").innerHTML=`<strong>Tổng ${all.length} việc</strong><span><i class="dot" style="background:var(--done)"></i>${c.done} đã xong</span><span><i class="dot" style="background:var(--doing)"></i>${c.doing} đang làm</span><span><i class="dot" style="background:var(--todo)"></i>${c.todo} chưa làm</span>`;
+}
+$("ftabs").onclick=e=>{const b=e.target.closest("[data-f]");if(b){filter=b.dataset.f;render()}};
+
+body.addEventListener("change",e=>{
+  const f=e.target.dataset.f;if(!f)return;
+  const tr=e.target.closest("tr"),g=findG(tr.dataset.g),v=e.target.value;
+  if(f==="gname"){g.name=v;save();return}
+  const t=g.tasks.find(x=>x.id===tr.dataset.t);
+  if(f==="name")t.name=v;
+  if(f==="note")t.note=v;
+  if(f==="start")t.start=v;
+  if(f==="days")t.days=Math.max(1,parseInt(v)||1);
+  if(f==="pct")t.pct=Math.min(100,Math.max(0,parseInt(v)||0));
+  if(f==="status")t.pct=v==="done"?100:v==="todo"?0:(t.pct>0&&t.pct<100?t.pct:50);
+  save();render();
+});
+body.addEventListener("click",e=>{
+  const b=e.target.closest("[data-a]");if(!b)return;
+  const tr=b.closest("tr"),g=findG(tr.dataset.g),a=b.dataset.a;
+  if(a==="tog")g.open=!g.open;
+  if(a==="addT")addTask(g);
+  if(a==="delT"&&confirm("Xóa việc này?"))g.tasks=g.tasks.filter(t=>t.id!==tr.dataset.t);
+  if(a==="delG"&&confirm("Xóa cả nhóm và các việc bên trong?"))P().groups=P().groups.filter(x=>x!==g);
+  save();render();renderMat();
+});
+function addTask(g){
+  const last=g.tasks[g.tasks.length-1];
+  const start=last&&last.start?iso(new Date(+endOf(last)+DAY)):iso(new Date());
+  g.tasks.push(T("Việc mới",start,1,0));g.open=true;
+}
+$("addTask").onclick=()=>{
+  const G=P().groups;if(!G.length)G.push({id:uid(),name:"1. NHÓM MỚI",open:true,tasks:[]});
+  addTask(G[G.length-1]);save();render();
+};
+$("addGroup").onclick=()=>{P().groups.push({id:uid(),name:(P().groups.length+1)+". NHÓM MỚI",open:true,tasks:[]});save();render();renderMat()};
+
+// ---------- kéo thả ----------
+let drag=null;
+const clearMarks=()=>body.querySelectorAll(".ob,.ot").forEach(x=>x.classList.remove("ob","ot"));
+body.addEventListener("mousedown",e=>{if(e.target.closest(".grip"))e.target.closest("tr").draggable=true});
+document.addEventListener("mouseup",()=>body.querySelectorAll("tr[draggable=true]").forEach(r=>r.draggable=false));
+body.addEventListener("dragstart",e=>{
+  const tr=e.target.closest("tr");if(!tr||!tr.draggable)return;
+  drag={t:tr.classList.contains("group")?"g":"t",g:tr.dataset.g,id:tr.dataset.t};
+  e.dataTransfer.effectAllowed="move";e.dataTransfer.setData("text/plain","x");
+  setTimeout(()=>tr.classList.add("dragging"));
+});
+body.addEventListener("dragover",e=>{
+  if(!drag)return;const tr=e.target.closest("tr[data-g]");if(!tr)return;
+  e.preventDefault();clearMarks();
+  const r=tr.getBoundingClientRect(),after=e.clientY>r.top+r.height/2;
+  tr.classList.add((drag.t==="t"&&tr.classList.contains("group"))||after?"ob":"ot");
+});
+body.addEventListener("drop",e=>{
+  if(!drag)return;e.preventDefault();
+  const d=drag,tr=e.target.closest("tr[data-g]");drag=null;clearMarks();if(!tr)return;
+  const r=tr.getBoundingClientRect(),after=e.clientY>r.top+r.height/2,tg=findG(tr.dataset.g),sg=findG(d.g),Gs=P().groups;
+  if(d.t==="t"){
+    const k=sg.tasks.findIndex(x=>x.id===d.id);if(k<0||tr.dataset.t===d.id)return;
+    const[task]=sg.tasks.splice(k,1);
+    const i=tr.dataset.t?tg.tasks.findIndex(x=>x.id===tr.dataset.t)+(after?1:0):tr.classList.contains("group")?0:tg.tasks.length;
+    tg.tasks.splice(i,0,task);tg.open=true;
+  }else{
+    if(tg===sg)return;
+    Gs.splice(Gs.indexOf(sg),1);
+    let i=Gs.indexOf(tg);if(after||!tr.classList.contains("group"))i++;
+    Gs.splice(i,0,sg);
+  }
+  save();render();
+});
+body.addEventListener("dragend",()=>{drag=null;clearMarks();render()});
+
+// ---------- vật tư ----------
+function renderMat(){
+  const p=P(),all=p.mats;
+  if(mg&&!p.groups.some(g=>g.id===mg))mg="";
+  const cnt=k=>k==="all"?all.length:all.filter(m=>m.status===k).length;
+  $("mtabs").innerHTML=[["all","Tất cả"],...Object.entries(MS)].map(([k,l])=>`<button class="tab" data-s="${k}" aria-pressed="${ms===k}">${l} <small>${cnt(k)}</small></button>`).join("");
+  $("mg").innerHTML='<option value="">Toàn công trình</option>'+p.groups.map(g=>`<option value="${g.id}" ${mg===g.id?"selected":""}>${esc(g.name)}</option>`).join("");
+  $("mcnt").textContent=cnt("need")?"("+cnt("need")+" thiếu)":"";
+  const ql=q.toLowerCase();
+  const list=all.filter(m=>(ms==="all"||m.status===ms)&&(!mg||m.gid===mg)&&(!ql||(m.name+" "+m.unit).toLowerCase().includes(ql)));
+  const opts=sel=>'<option value="">—</option>'+p.groups.map(g=>`<option value="${g.id}" ${g.id===sel?"selected":""}>${esc(g.name)}</option>`).join("");
+  $("mbody").innerHTML=list.map(m=>`<tr data-m="${m.id}">
+    <td><input data-f="name" value="${esc(m.name)}" aria-label="Tên vật tư"></td>
+    <td><div class="qty"><input class="num" data-f="qty" type="number" min="0" step="any" value="${m.qty}" aria-label="Số lượng"><input class="unit" data-f="unit" value="${esc(m.unit)}" aria-label="Đơn vị"></div></td>
+    <td><select data-f="gid" aria-label="Hạng mục phục vụ">${opts(m.gid)}</select></td>
+    <td><input class="date" data-f="due" type="date" value="${m.due||""}" aria-label="Hạn tập kết"></td>
+    <td><select class="st s-${m.status}" data-f="status" aria-label="Trạng thái">${Object.entries(MS).map(([k,l])=>`<option value="${k}" ${k===m.status?"selected":""}>${l}</option>`).join("")}</select></td>
+    <td><div class="act"><button class="ic" data-a="delM" aria-label="Xóa vật tư">✕</button></div></td></tr>`).join("")
+    ||`<tr><td colspan="6" class="empty">Không có vật tư nào phù hợp với bộ lọc hiện tại.</td></tr>`;
+}
+$("mtabs").onclick=e=>{const b=e.target.closest("[data-s]");if(b){ms=b.dataset.s;renderMat()}};
+$("mg").onchange=e=>{mg=e.target.value;renderMat()};
+$("q").oninput=e=>{q=e.target.value;renderMat()};
+$("addMat").onclick=()=>{
+  P().mats.push({id:uid(),name:"Vật tư mới",qty:1,unit:"cái",gid:mg||"",due:"",status:"need"});
+  save();renderMat();
+};
+$("mbody").addEventListener("change",e=>{
+  const f=e.target.dataset.f;if(!f)return;
+  const m=P().mats.find(x=>x.id===e.target.closest("tr").dataset.m);
+  m[f]=f==="qty"?Math.max(0,parseFloat(e.target.value)||0):e.target.value;
+  save();renderMat();
+});
+$("mbody").addEventListener("click",e=>{
+  const b=e.target.closest('[data-a="delM"]');if(!b||!confirm("Xóa vật tư này?"))return;
+  const id=b.closest("tr").dataset.m;P().mats=P().mats.filter(x=>x.id!==id);save();renderMat();
+});
+
+// ---------- xuất, nhập, in ----------
+$("print").onclick=()=>window.print();
+$("exp").onclick=()=>{
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(S,null,2)],{type:"application/json"}));
+  a.download="quan-ly-thi-cong.json";a.click();
+};
+$("imp").onclick=()=>$("file").click();
+$("file").onchange=async e=>{
+  try{
+    const d=JSON.parse(await e.target.files[0].text());
+    if(!Array.isArray(d.projects)||!d.projects.length)throw 0;
+    S=d;if(!S.projects.some(p=>p.id===S.cur))S.cur=S.projects[0].id;
+    S.projects.forEach(p=>{p.mats=p.mats||[]});
+    save();renderAll();
+  }catch(err){alert("File JSON không hợp lệ.")}
+};
+
+renderAll();
+</script>
+</body>
+</html>
